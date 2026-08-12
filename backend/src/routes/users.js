@@ -1,0 +1,3 @@
+import {Router} from 'express';import bcrypt from 'bcryptjs';import User from '../models/User.js';import {auth,admin} from '../middleware.js';
+const r=Router();r.get('/',auth,admin,async(req,res)=>res.json(await User.find().select('-passwordHash').sort({createdAt:-1})));
+r.put('/me',auth,async(req,res)=>{try{const {name,phone,avatar,password}=req.body;const u=await User.findById(req.user.id);if(name!==undefined)u.name=name;if(phone!==undefined)u.phone=phone;if(avatar!==undefined)u.avatar=avatar;if(password)u.passwordHash=await bcrypt.hash(password,10);await u.save();res.json({id:u._id,name:u.name,email:u.email,role:u.role,phone:u.phone,avatar:u.avatar})}catch(e){res.status(400).json({message:e.message})}});export default r;

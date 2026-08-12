@@ -1,0 +1,3 @@
+import mongoose from 'mongoose';
+const schema=new mongoose.Schema({property:{type:mongoose.Schema.Types.ObjectId,ref:'Property',required:true},roomId:{type:mongoose.Schema.Types.ObjectId,required:true},user:{type:mongoose.Schema.Types.ObjectId,ref:'User',required:true},checkIn:{type:Date,required:true},checkOut:{type:Date,required:true},guests:{type:Number,default:1},status:{type:String,enum:['confirmed','cancelled'],default:'confirmed'},paymentStatus:{type:String,enum:['pending','paid','refunded'],default:'pending'},paymentMethod:{type:String,default:'demo-card'},totalAmount:{type:Number,required:true}},{timestamps:true});
+export default mongoose.model('Booking',schema);

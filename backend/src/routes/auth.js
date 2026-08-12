@@ -1,0 +1,6 @@
+import {Router} from 'express';import bcrypt from 'bcryptjs';import jwt from 'jsonwebtoken';import User from '../models/User.js';import {auth} from '../middleware.js';
+const r=Router();const sign=u=>jwt.sign({id:u._id.toString(),name:u.name,email:u.email,role:u.role},process.env.JWT_SECRET||'dev-secret',{expiresIn:'7d'});const safe=u=>({id:u._id,name:u.name,email:u.email,role:u.role,phone:u.phone,avatar:u.avatar});
+r.post('/register',async(req,res)=>{try{const {name,email,password}=req.body;if(!name||!email||!password)return res.status(400).json({message:'Name, email and password are required'});if(await User.findOne({email:email.toLowerCase()}))return res.status(409).json({message:'Email already registered'});const u=await User.create({name,email:email.toLowerCase(),passwordHash:await bcrypt.hash(password,10)});res.status(201).json({token:sign(u),user:safe(u)})}catch(e){res.status(400).json({message:e.message})}});
+r.post('/login',async(req,res)=>{try{const u=await User.findOne({email:req.body.email?.toLowerCase()});if(!u||!(await bcrypt.compare(req.body.password||'',u.passwordHash||'')))return res.status(401).json({message:'Invalid email or password'});res.json({token:sign(u),user:safe(u)})}catch(e){res.status(400).json({message:e.message})}});
+r.get('/me',auth,async(req,res)=>res.json(safe(await User.findById(req.user.id))));
+export default r;
