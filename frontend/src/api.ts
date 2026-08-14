@@ -1,3 +1,3 @@
-export const API='http://localhost:5000/api';
+export const API='/api';
 export async function api(path:string,options:RequestInit={},token?:string|null){const headers=new Headers(options.headers);if(options.body&&!headers.has('Content-Type'))headers.set('Content-Type','application/json');if(token)headers.set('Authorization',`Bearer ${token}`);const r=await fetch(`${API}${path}`,{...options,headers});const data=await r.json().catch(()=>({}));if(!r.ok)throw new Error(data.message||'Request failed');return data}
 export async function downloadFile(path:string,token:string,filename:string){const r=await fetch(`${API}${path}`,{headers:{Authorization:`Bearer ${token}`}});if(!r.ok)throw new Error('Could not download file');const blob=await r.blob();const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=filename;a.click();URL.revokeObjectURL(a.href)}
