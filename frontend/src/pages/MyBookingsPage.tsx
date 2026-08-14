@@ -263,7 +263,6 @@ export default function MyBookingsPage(){
                     color="error"
                     disabled={
                       b.status==='cancelled' ||
-                      b.paymentStatus==='paid'
                     }
                     onClick={()=>cancel(b._id)}
                   >
