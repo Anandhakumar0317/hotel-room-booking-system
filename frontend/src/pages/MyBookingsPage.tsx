@@ -202,7 +202,37 @@ export default function MyBookingsPage(){
                 <Typography sx={{mt:1}}>
                   Guests: {b.guests} • <b>₹{b.totalAmount}</b>
                 </Typography>
+		{/* REFUND DETAILS */}
 
+{b.status==='cancelled' && b.paymentStatus==='paid' && (
+
+  <Stack
+    sx={{mt:2}}
+    spacing={0.5}
+  >
+
+    <Typography>
+      Refund: <b>{b.refundPercentage || 0}%</b>
+    </Typography>
+
+    <Typography>
+      Refund Amount: <b>₹{b.refundAmount || 0}</b>
+    </Typography>
+
+    <Typography>
+      Refund Status:{' '}
+      <b>
+        {b.refundStatus==='pending'
+          ? 'Pending'
+          : b.refundStatus==='processed'
+            ? 'Processed'
+            : 'Not Applicable'}
+      </b>
+    </Typography>
+
+  </Stack>
+
+)}
                 <Stack
                   direction="row"
                   spacing={1}
@@ -262,7 +292,7 @@ export default function MyBookingsPage(){
                   <Button
                     color="error"
                     disabled={
-                      b.status==='cancelled' ||
+                      b.status==='cancelled'
                     }
                     onClick={()=>cancel(b._id)}
                   >
