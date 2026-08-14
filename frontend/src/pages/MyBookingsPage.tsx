@@ -104,7 +104,8 @@ export default function MyBookingsPage(){
         {
           method:'POST',
           body:JSON.stringify({
-            method:'demo-card'
+            method:'online',
+	     transactionId:`DEMO-${Date.now()}`
           })
         },
         s.token
