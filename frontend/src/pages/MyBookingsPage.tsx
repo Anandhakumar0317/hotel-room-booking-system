@@ -225,7 +225,7 @@ export default function MyBookingsPage(){
         {b.refundStatus==='pending'
           ? 'Pending'
           : b.refundStatus==='processed'
-            ? 'Processed'
+            ? 'Completed'
             : 'Not Applicable'}
       </b>
     </Typography>

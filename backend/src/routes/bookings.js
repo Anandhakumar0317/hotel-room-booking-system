@@ -1123,4 +1123,111 @@ r.patch(
 );
 
 
+/*
+========================================
+ADMIN - APPROVE REFUND
+========================================
+*/
+
+r.patch(
+  '/:id/refund',
+  auth,
+  admin,
+  async (req, res) => {
+
+    try {
+
+      const b =
+        await Booking.findById(
+          req.params.id
+        );
+
+      if (!b) {
+
+        return res.status(404).json({
+          message:
+            'Booking not found.',
+        });
+
+      }
+
+      if (
+        b.status !==
+        'cancelled'
+      ) {
+
+        return res.status(400).json({
+          message:
+            'Only cancelled bookings can be refunded.',
+        });
+
+      }
+
+      if (
+        Number(
+          b.refundAmount || 0
+        ) <= 0
+      ) {
+
+        return res.status(400).json({
+          message:
+            'No refund amount available.',
+        });
+
+      }
+
+      if (
+        b.refundStatus ===
+        'processed'
+      ) {
+
+        return res.status(400).json({
+          message:
+            'Refund is already processed.',
+        });
+
+      }
+
+      b.refundStatus =
+        'processed';
+
+      await b.save();
+
+      res.json({
+
+        message:
+          'Refund approved successfully.',
+
+        bookingId:
+          b.bookingId,
+
+        refundPercentage:
+          b.refundPercentage,
+
+        refundAmount:
+          b.refundAmount,
+
+        refundStatus:
+          b.refundStatus,
+
+      });
+
+    } catch (e) {
+
+      console.error(
+        'Refund approval error:',
+        e
+      );
+
+      res.status(400).json({
+        message:
+          e.message,
+      });
+
+    }
+
+  }
+);
+
+
 export default r;

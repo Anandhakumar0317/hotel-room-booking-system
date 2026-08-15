@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { RootState } from '../store/store';
-import { api } from '../api';
+import { api, downloadFile } from '../api';
 
 import {
   Typography,
@@ -68,6 +68,78 @@ export default function AdminPage() {
 
   const [msg, setMsg] =
     useState('');
+
+  const [refundBooking, setRefundBooking] =
+    useState<any | null>(null);
+
+  const [reportSearched, setReportSearched] =
+    useState(false);
+
+  const [reportCount, setReportCount] =
+    useState(0);
+
+  const [reportLoading, setReportLoading] =
+    useState(false);
+
+  const [reportFilter, setReportFilter] =
+    useState({
+      from: '',
+      to: '',
+      status: 'all',
+      paymentStatus: 'all',
+      paymentMethod: 'all',
+      refundStatus: 'all',
+      hotel: 'all',
+      location: 'all',
+      search: '',
+    });
+
+
+  const searchReport = async () => {
+
+    setReportLoading(true);
+    setReportSearched(false);
+    setReportCount(0);
+
+    try {
+
+      const q =
+        new URLSearchParams(
+          reportFilter
+        ).toString();
+
+      const result = await api(
+        `/admin/reports/bookings?${q}`,
+        {},
+        s.token
+      );
+
+      const count =
+        result.bookings?.length || 0;
+
+      setReportCount(count);
+      setReportSearched(true);
+
+      if (count === 0) {
+        setMsg('No bookings found for the selected report filters.');
+      } else {
+        setMsg('');
+      }
+
+    } catch (e: any) {
+
+      setMsg(
+        e.message ||
+        'Unable to search report.'
+      );
+
+    } finally {
+
+      setReportLoading(false);
+
+    }
+
+  };
 
 
   /*
@@ -527,6 +599,405 @@ export default function AdminPage() {
         </Stack>
 
 
+        {/* ==================================
+            REPORT FILTERS
+        ================================== */}
+
+        <Paper
+          variant="outlined"
+          sx={{
+            mt: 2,
+            p: 2,
+          }}
+        >
+
+          <Typography
+            variant="h6"
+            fontWeight={700}
+            gutterBottom
+          >
+            Reports & Filters
+          </Typography>
+
+          <Grid
+            container
+            spacing={2}
+          >
+
+            <Grid item xs={12} sm={6} md={3}>
+              <TextField
+                fullWidth
+                type="date"
+                label="From Date"
+                InputLabelProps={{
+                  shrink: true,
+                }}
+                value={reportFilter.from}
+                onChange={(e) =>
+                  setReportFilter({
+                    ...reportFilter,
+                    from: e.target.value,
+                  })
+                }
+              />
+            </Grid>
+
+
+            <Grid item xs={12} sm={6} md={3}>
+              <TextField
+                fullWidth
+                type="date"
+                label="To Date"
+                InputLabelProps={{
+                  shrink: true,
+                }}
+                value={reportFilter.to}
+                onChange={(e) =>
+                  setReportFilter({
+                    ...reportFilter,
+                    to: e.target.value,
+                  })
+                }
+              />
+            </Grid>
+
+
+            <Grid item xs={12} sm={6} md={3}>
+              <TextField
+                select
+                fullWidth
+                label="Booking Status"
+                value={reportFilter.status}
+                onChange={(e) =>
+                  setReportFilter({
+                    ...reportFilter,
+                    status: e.target.value,
+                  })
+                }
+              >
+                <option value="all">
+                  All
+                </option>
+
+                <option value="confirmed">
+                  Confirmed
+                </option>
+
+                <option value="cancelled">
+                  Cancelled
+                </option>
+
+              </TextField>
+            </Grid>
+
+
+            <Grid item xs={12} sm={6} md={3}>
+              <TextField
+                select
+                fullWidth
+                label="Payment Status"
+                value={
+                  reportFilter.paymentStatus
+                }
+                onChange={(e) =>
+                  setReportFilter({
+                    ...reportFilter,
+                    paymentStatus:
+                      e.target.value,
+                  })
+                }
+              >
+                <option value="all">
+                  All
+                </option>
+
+                <option value="pending">
+                  Pending
+                </option>
+
+                <option value="paid">
+                  Paid
+                </option>
+
+                <option value="refunded">
+                  Refunded
+                </option>
+
+              </TextField>
+            </Grid>
+
+
+            <Grid item xs={12} sm={6} md={3}>
+              <TextField
+                select
+                fullWidth
+                label="Payment Method"
+                value={
+                  reportFilter.paymentMethod
+                }
+                onChange={(e) =>
+                  setReportFilter({
+                    ...reportFilter,
+                    paymentMethod:
+                      e.target.value,
+                  })
+                }
+              >
+                <option value="all">
+                  All
+                </option>
+
+                <option value="online">
+                  Online
+                </option>
+
+                <option value="offline">
+                  Offline
+                </option>
+
+              </TextField>
+            </Grid>
+
+
+            <Grid item xs={12} sm={6} md={3}>
+              <TextField
+                select
+                fullWidth
+                label="Refund Status"
+                value={
+                  reportFilter.refundStatus
+                }
+                onChange={(e) =>
+                  setReportFilter({
+                    ...reportFilter,
+                    refundStatus:
+                      e.target.value,
+                  })
+                }
+              >
+                <option value="all">
+                  All
+                </option>
+
+                <option value="not_applicable">
+                  Not Applicable
+                </option>
+
+                <option value="pending">
+                  Pending
+                </option>
+
+                <option value="processed">
+                  Completed
+                </option>
+
+              </TextField>
+            </Grid>
+
+
+            <Grid item xs={12} sm={6} md={3}>
+              <TextField
+                select
+                fullWidth
+                label="Hotel"
+                value={reportFilter.hotel}
+                onChange={(e) =>
+                  setReportFilter({
+                    ...reportFilter,
+                    hotel: e.target.value,
+                  })
+                }
+              >
+                <option value="all">
+                  All Hotels
+                </option>
+
+                {props.map((p) => (
+                  <option
+                    key={p._id}
+                    value={p._id}
+                  >
+                    {p.name}
+                  </option>
+                ))}
+
+              </TextField>
+            </Grid>
+
+
+            <Grid item xs={12} sm={6} md={3}>
+              <TextField
+                select
+                fullWidth
+                label="Location"
+                value={reportFilter.location}
+                onChange={(e) =>
+                  setReportFilter({
+                    ...reportFilter,
+                    location: e.target.value,
+                  })
+                }
+              >
+                <option value="all">
+                  All Locations
+                </option>
+
+                {[
+                  ...new Set(
+                    props
+                      .map((p) => p.location)
+                      .filter(Boolean)
+                  ),
+                ].map((location) => (
+                  <option
+                    key={location}
+                    value={location}
+                  >
+                    {location}
+                  </option>
+                ))}
+
+              </TextField>
+            </Grid>
+
+
+            <Grid item xs={12} sm={6} md={3}>
+              <TextField
+                fullWidth
+                label="Report Search"
+                placeholder="Booking ID / Guest / Hotel"
+                value={reportFilter.search}
+                onChange={(e) =>
+                  setReportFilter({
+                    ...reportFilter,
+                    search: e.target.value,
+                  })
+                }
+              />
+            </Grid>
+
+
+            <Grid item xs={12} sm={6} md={6}>
+              <Stack
+                direction="row"
+                spacing={1}
+                sx={{
+                  height: '100%',
+                  alignItems: 'center',
+                  flexWrap: 'nowrap',
+                }}
+              >
+
+                <Button
+                  variant="contained"
+                  color="primary"
+                  onClick={searchReport}
+                  disabled={reportLoading}
+                >
+                  {reportLoading
+                    ? 'Searching...'
+                    : 'Search'}
+                </Button>
+
+                <Button
+                  variant="contained"
+                  color="error"
+                  disabled={!reportSearched || reportCount === 0}
+                  onClick={async () => {
+
+                    try {
+
+                      const q =
+                        new URLSearchParams(
+                          reportFilter
+                        ).toString();
+
+                      await downloadFile(
+                        `/admin/reports/bookings.pdf?${q}`,
+                        s.token!,
+                        'stayeasy-booking-report.pdf'
+                      );
+
+                    } catch (e: any) {
+
+                      setMsg(
+                        e.message ||
+                        'Unable to download PDF.'
+                      );
+
+                    }
+
+                  }}
+                >
+                  PDF
+                </Button>
+
+
+                <Button
+                  variant="contained"
+                  color="success"
+                  disabled={!reportSearched || reportCount === 0}
+                  onClick={async () => {
+
+                    try {
+
+                      const q =
+                        new URLSearchParams(
+                          reportFilter
+                        ).toString();
+
+                      await downloadFile(
+                        `/admin/reports/bookings.xlsx?${q}`,
+                        s.token!,
+                        'stayeasy-booking-report.xlsx'
+                      );
+
+                    } catch (e: any) {
+
+                      setMsg(
+                        e.message ||
+                        'Unable to download Excel.'
+                      );
+
+                    }
+
+                  }}
+                >
+                  Excel
+                </Button>
+
+
+                <Button
+                  variant="outlined"
+                  onClick={() => {
+                    setReportFilter({
+                      from: '',
+                      to: '',
+                      status: 'all',
+                      paymentStatus: 'all',
+                      paymentMethod: 'all',
+                      refundStatus: 'all',
+                      hotel: 'all',
+                      location: 'all',
+                      search: '',
+                    });
+
+                    setReportSearched(false);
+                    setReportCount(0);
+                    setMsg('');
+                  }}
+                >
+                  Reset
+                </Button>
+
+              </Stack>
+            </Grid>
+
+          </Grid>
+
+        </Paper>
+
+
         <Box
           sx={{
             width: '100%',
@@ -759,28 +1230,60 @@ export default function AdminPage() {
                           b.refundAmount || 0
                         ) > 0 ? (
 
-                          <Typography
-                            variant="body2"
-                            fontWeight={600}
-                          >
-                            ₹
-                            {Number(
-                              b.refundAmount
-                            ).toFixed(2)}
-
-                            <br />
+                          <Stack spacing={0.5}>
 
                             <Typography
-                              component="span"
-                              variant="caption"
-                              color="text.secondary"
+                              variant="body2"
+                              fontWeight={600}
                             >
-                              {
-                                b.refundPercentage
-                              }%
+                              ₹
+                              {Number(
+                                b.refundAmount
+                              ).toFixed(2)}
+
+                              <br />
+
+                              <Typography
+                                component="span"
+                                variant="caption"
+                                color="text.secondary"
+                              >
+                                {b.refundPercentage}%
+                              </Typography>
+
                             </Typography>
 
-                          </Typography>
+                            <Chip
+                              size="small"
+                              label={
+                                b.refundStatus ===
+                                'processed'
+                                  ? 'Completed'
+                                  : 'Pending'
+                              }
+                              color={
+                                b.refundStatus ===
+                                'processed'
+                                  ? 'success'
+                                  : 'warning'
+                              }
+                            />
+
+                            {b.refundStatus ===
+                              'pending' && (
+
+                              <Button
+                                size="small"
+                                variant="contained"
+                                color="success"
+                                onClick={() => setRefundBooking(b)}
+                              >
+                                Approve Refund
+                              </Button>
+
+                            )}
+
+                          </Stack>
 
                         ) : (
 
@@ -1103,6 +1606,105 @@ export default function AdminPage() {
         </DialogActions>
 
       </Dialog>
+
+
+      {/* REFUND CONFIRMATION */}
+
+      <Dialog
+        open={Boolean(refundBooking)}
+        onClose={() => setRefundBooking(null)}
+      >
+
+        <DialogTitle>
+          Approve Refund
+        </DialogTitle>
+
+
+        <DialogContent>
+
+          <Typography>
+            Are you sure you want to approve this refund?
+          </Typography>
+
+
+          <Typography sx={{ mt: 2 }}>
+            Booking ID:{' '}
+            <b>
+              {refundBooking?.bookingId ||
+                refundBooking?._id}
+            </b>
+          </Typography>
+
+
+          <Typography>
+            Refund Amount:{' '}
+            <b>
+              ₹
+              {Number(
+                refundBooking?.refundAmount || 0
+              ).toFixed(2)}
+            </b>
+          </Typography>
+
+
+          <Typography>
+            Refund:{' '}
+            <b>
+              {refundBooking?.refundPercentage || 0}%
+            </b>
+          </Typography>
+
+        </DialogContent>
+
+
+        <DialogActions>
+
+          <Button
+            onClick={() =>
+              setRefundBooking(null)
+            }
+          >
+            Cancel
+          </Button>
+
+
+          <Button
+            variant="contained"
+            color="success"
+            onClick={async () => {
+
+              try {
+
+                await api(
+                  `/bookings/${refundBooking._id}/refund`,
+                  {
+                    method: 'PATCH',
+                  },
+                  s.token
+                );
+
+                setRefundBooking(null);
+
+                await load();
+
+              } catch (e: any) {
+
+                setMsg(
+                  e.message ||
+                  'Unable to process refund.'
+                );
+
+              }
+
+            }}
+          >
+            Confirm Refund
+          </Button>
+
+        </DialogActions>
+
+      </Dialog>
+
 
     </>
   );
